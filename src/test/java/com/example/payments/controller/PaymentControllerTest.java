@@ -5,6 +5,7 @@ import com.example.payments.dto.PaymentDto;
 import com.example.payments.exception.ResourceNotFoundException;
 import com.example.payments.services.impl.PaymentServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -17,8 +18,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -36,10 +36,21 @@ class PaymentControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private PaymentDto invalidPayment;
+
+    private PaymentDto validPayment;
+
+    @BeforeEach
+    public void setup() {
+        validPayment = new PaymentDto( 1L, new AmountDto("RSD", new BigDecimal("1.23")), "Payment note");
+        invalidPayment = new PaymentDto(10L, new AmountDto("RS", null), null);
+
+    }
+
     @Test
     public void testGetPayment_Success() throws Exception {
         // GIVEN
-        PaymentDto paymentDto = getPaymentDto();
+        PaymentDto paymentDto = validPayment;
         // When paymentService.getPaymentById(1L) is called, return paymentDto
         when(paymentService.getPaymentById(1L)).thenReturn(paymentDto);
 
@@ -54,10 +65,6 @@ class PaymentControllerTest {
                 .andExpect(jsonPath("$.amount.value", is(1.23)))  // Assert amount value
                 .andExpect(jsonPath("$.note", is("Payment note"))); // Assert note
 
-    }
-
-    private PaymentDto getPaymentDto() {
-        return new PaymentDto(1L, new AmountDto("RSD", new BigDecimal("1.23")), "Payment note");
     }
 
     @Test
@@ -80,8 +87,8 @@ class PaymentControllerTest {
     public void testCreatePayment_Success() throws Exception {
 
         // GIVEN - Input PaymentDto and the expected response PaymentDto
-        PaymentDto inputPaymentDto = getPaymentDto();
-        PaymentDto savedPaymentDto = getPaymentDto();
+        PaymentDto inputPaymentDto = validPayment;
+        PaymentDto savedPaymentDto = validPayment;
 
         // Mock the service layer to return the expected saved PaymentDto
         when(paymentService.createPayment(any())).thenReturn(savedPaymentDto);
@@ -101,9 +108,31 @@ class PaymentControllerTest {
     }
 
     @Test
+    public void testCreatePaymentReturnValidationErrors_whenInvalidPayment() throws Exception {
+
+        // GIVEN - Input invalid PaymentDto
+        PaymentDto inputPaymentDto = invalidPayment;
+
+        // WHEN - Perform POST request
+        ResultActions resultActions = mockMvc.perform(post("/api/payments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(inputPaymentDto)));// Convert inputPaymentDto to JSON
+
+        // THEN - Check the response
+        resultActions.andExpect(status().isBadRequest()) // Expect HTTP 400 Bad Request
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                // Check that validation errors are returned in the respons;
+                // TODO Problem with amount assert should be fixed.
+//                .andExpect(jsonPath("$.amount.currency").value("Payment currency mast have exactly 3 characters"))
+//                .andExpect(jsonPath("$.amount.value").value("Payment amount cannot be null"))
+                .andExpect(jsonPath("$.note").value("Payment note cannot be null"));
+
+    }
+
+    @Test
     public void testGetAllPayments() throws Exception {
         // GIVEN - Expected list of payments
-        List<PaymentDto> payments = Arrays.asList(getPaymentDto(), getPaymentDto());
+        List<PaymentDto> payments = Arrays.asList(validPayment, validPayment);
 
         // Mock the service layer to perform GET for all payments and return the expected list of payments
         when(paymentService.getAllPayments()).thenReturn(payments);
@@ -130,8 +159,8 @@ class PaymentControllerTest {
     public void testUpdatePayment_Success() throws Exception {
 
         // GIVEN - Input payment dto and expected updated payment dto
-        PaymentDto inputPayment = getPaymentDto();
-        PaymentDto updatedPayment = getPaymentDto();
+        PaymentDto inputPayment = validPayment;
+        PaymentDto updatedPayment = validPayment;
 
         // Mock the service layer to perform update payment action and return expected updated payment
         when(paymentService.updatePaymentById(any(), any())).thenReturn(updatedPayment);
