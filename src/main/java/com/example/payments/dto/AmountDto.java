@@ -19,12 +19,12 @@ import java.math.BigDecimal;
 public class AmountDto {
 
     @Schema(description = "Currency code of the payment", example = "RSD")
-    @NotNull(message = "Payment currency cannot be null")
+    @NotNull
     @Size(min = 3, max = 3, message = "Payment currency mast have exactly 3 characters")
     private String currency;
 
     @Schema(description = "Value of the payment", example = "1.23")
-    @NotNull(message = "Payment amount cannot be null")
+    @NotNull
     @DecimalMin(value = "0.0", inclusive = false, message = "Payment amount must be greater than 0")
     private BigDecimal value;
 

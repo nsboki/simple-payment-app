@@ -21,11 +21,11 @@ public class PaymentDto {
     private Long id;
 
     @Schema(description = "Currency code and value of the payment")
-    @NotNull(message = "Payment amount cannot be null")
+    @NotNull
     @Valid
     private AmountDto amount;
 
     @Schema(description = "Payment note", example = "pays, receives")
-    @NotNull(message = "Payment note cannot be null")
+    @NotNull
     private String note;
 }
