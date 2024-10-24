@@ -1,6 +1,6 @@
-"# simple-payment-app" 
+# simple-payment-app 
 
-1. OpenAPI documentation
+## OpenAPI documentation
 
 springdoc-openapi-ui is a library that helps you automatically generate and 
 expose OpenAPI documentation for your Spring Boot APIs. 
@@ -16,6 +16,11 @@ Here you can:
 * Test API methods (GET, POST, PUT, DELETE, etc.) with the appropriate request data.
 * See example responses and status codes for each API.
 
-2. H2 in memory database
+## Local setup
 
-H2 console available at 'http://localhost:8080/h2-console'.
+1. Start docker containers from `local-setup` folder: 
+    ``` shell
+    cd local-setup
+    docker compose up
+    ```
+1. Start `PaymentsApplication` with `local` spring profile
